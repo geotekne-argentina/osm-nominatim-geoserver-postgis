@@ -3,3 +3,4 @@ data/geoserver/**/*.bak
 data/geoserver/**/*.orig
 pbfs/*.pbf
 data/geoserver/**/osm-lowres.gpkg
+data/geoserver/data_dir/gwc/diskquota_page_store_h2/
