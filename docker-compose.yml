@@ -1,0 +1,63 @@
+services: 
+  geoserver:
+    image: 'kartoza/geoserver:2.20.4'
+    hostname: geoserver
+    env_file:
+      - ./geoserver.env
+    ports:
+      - "8080:8080"
+    volumes:
+      - './data/geoserver/data_dir/:/opt/geoserver/data_dir'
+      - './fonts/:/opt/fonts'
+    depends_on:
+      - postgis
+    restart: on-failure
+
+  wmsclient:
+    image: 'nginx:1.21.3-alpine'
+    hostname: wmsclient
+    volumes:
+      - './data/nginx/html/nominatim-ui:/usr/share/nginx/html'
+    ports:
+      - "80:80"
+    restart: on-failure
+
+  nominatim:
+    image: 'camptocamp/nominatim:4.4.0'
+    hostname: nominatim
+    env_file:
+      - ./nominatim.env
+    volumes:
+      - './pbfs/:/tmp/pbfs'
+    ports:
+      - "8081:8080"
+    depends_on:
+      - postgis
+    restart: on-failure
+
+  postgis:
+    image: 'kartoza/postgis:12.1'
+    hostname: postgis
+    container_name: osm-geoserver-postgis_postgis
+    env_file:
+      - ./postgis.env
+    volumes:
+      - 'pgdata:/var/lib/postgresql'
+    ports:
+      - "5432:5432"
+    expose:
+      - '5432'
+    restart: on-failure
+
+  imposm-worker:
+    image: 'geotekne/imposm-worker:1.0.0'
+    hostname: imposm-worker
+    environment:
+      - PARAMETERS=-i /pbfs -c osm-geoserver-postgis_postgis -v 12.1 -p 5432 -u docker -w docker -d gis
+    volumes:
+      - './pbfs/:/pbfs'
+    depends_on:
+      - postgis
+
+volumes: 
+     pgdata:
